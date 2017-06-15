@@ -70,6 +70,9 @@ do_install() {
 
 	sh_c='sh -c'
 	rootsh_c='sh -c'
+	python_c='python3 '
+	pip_c='sudo pip3 '
+
 	if [ "$user" != 'root' ]; then
 		if command_exists sudo; then
 			rootsh_c='sudo -E sh -c'
@@ -92,20 +95,18 @@ do_install() {
 	fi
 	if [ -z "$lsb_dist" ] && [ -r /etc/lsb-release ]; then
 		lsb_dist="$(. /etc/lsb-release && echo "$DISTRIB_ID")"
-	fi
-	if [ -z "$lsb_dist" ] && [ -r /etc/debian_version ]; then
+	elif [ -z "$lsb_dist" ] && [ -r /etc/debian_version ]; then
 		lsb_dist='debian'
-	fi
-	if [ -z "$lsb_dist" ] && [ -r /etc/fedora-release ]; then
+	elif [ -z "$lsb_dist" ] && [ -r /etc/fedora-release ]; then
 		lsb_dist='fedora'
-	fi
-	if [ -z "$lsb_dist" ]; then
+	elif [ -z "$lsb_dist" ]; then
 		if [ -r /etc/centos-release ] || [ -r /etc/redhat-release ]; then
 			lsb_dist='centos'
 		fi
-	fi
-	if [ -z "$lsb_dist" ] && [ -r /etc/os-release ]; then
+	elif [ -z "$lsb_dist" ] && [ -r /etc/os-release ]; then
 		lsb_dist="$(. /etc/os-release && echo "$ID")"
+	elif [ "$OSTYPE" == "darwin"* ]; then
+		lsb_dist='darwin'
 	fi
 
 	lsb_dist="$(echo "$lsb_dist" | tr '[:upper:]' '[:lower:]')"
@@ -185,6 +186,13 @@ do_install() {
 			fi
 			;;
 
+		darwin)
+			(
+				set -x
+				$sh_c 'brew install cmake git open-ocd python3 wget'
+			)
+			;;
+
 		*)
 			# intentionally mixed spaces and tabs here -- tabs are stripped by "<<-'EOF'", spaces are kept in the output
 			cat >&2 <<-'EOF'
@@ -194,10 +202,6 @@ do_install() {
 			EOF
 			;;
 	esac
-
-	# Look for python3
-	python_c='python3 '
-	pip_c='pip3 '
 
 	set -x
 	$pip_c install GitPython tabulate argcomplete colorama jsonschema intelhex
@@ -217,6 +221,18 @@ do_install() {
 		set -x
 		$rootsh_c 'activate-global-python-argcomplete'
 	fi
+
+	case "$OSTYPE" in
+		linux-gnu)
+			$sh_c 'wget -P ./core https://launchpad.net/gcc-arm-embedded/4.9/4.9-2014-q4-major/+download/gcc-arm-none-eabi-4_9-2014q4-20141203-linux.tar.bz2 && tar xf ./core/gcc-arm-none-eabi-4_9-2014q4-20141203-linux.tar.bz2 -C ./core && mv ./core/gcc-arm-none-eabi-4_9-2014q4 ./core/gcc-arm-none-eabi && rm ./core/gcc-arm-none-eabi-4_9-2014q4-20141203-linux.tar.bz2'
+		;;
+		darwin*)
+			$sh_c 'wget -P ./core https://launchpad.net/gcc-arm-embedded/4.9/4.9-2014-q4-major/+download/gcc-arm-none-eabi-4_9-2014q4-20141203-mac.tar.bz2 && tar xf ./core/gcc-arm-none-eabi-4_9-2014q4-20141203-mac.tar.bz2 -C ./core && mv ./core/gcc-arm-none-eabi-4_9-2014q4 ./core/gcc-arm-none-eabi && rm ./core/gcc-arm-none-eabi-4_9-2014q4-20141203-mac.tar.bz2'
+		;;
+
+		*)
+		;;
+	esac
 
 	exit 0
 }
