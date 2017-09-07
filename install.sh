@@ -195,19 +195,15 @@ do_install() {
 			;;
 	esac
 
-	# Look for python3
-	python_c='python3 '
-	pip_c='pip3 '
-
 	set -x
-	$pip_c install GitPython tabulate argcomplete colorama jsonschema intelhex
+	$rootsh_c 'pip3 install GitPython tabulate argcomplete colorama jsonschema intelhex'
 
 	(
 		set -x
 		$sh_c 'mkdir -p ./core'
 		$sh_c 'wget -P ./core https://launchpad.net/gcc-arm-embedded/4.9/4.9-2014-q4-major/+download/gcc-arm-none-eabi-4_9-2014q4-20141203-linux.tar.bz2 && tar xf ./core/gcc-arm-none-eabi-4_9-2014q4-20141203-linux.tar.bz2 -C ./core && mv ./core/gcc-arm-none-eabi-4_9-2014q4 ./core/gcc-arm-none-eabi && rm ./core/gcc-arm-none-eabi-4_9-2014q4-20141203-linux.tar.bz2'
 		$sh_c 'git clone https://github.com/novalabs/core-tools.git ./core/core-tools'
-		$python_c './core/core-tools/CoreBootstrap.py'
+		$sh_c 'python3 ./core/core-tools/CoreBootstrap.py'
 	)
 
 	if command_exists activate-global-python-argcomplete3; then
