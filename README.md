@@ -1,2 +1,2 @@
-# core-install
-Nova Core install script
+# get-core
+Nova Core SDK install script
